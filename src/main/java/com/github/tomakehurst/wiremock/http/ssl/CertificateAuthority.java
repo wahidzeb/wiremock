@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2021 Thomas Akehurst
+ * Copyright (C) 2020-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 package com.github.tomakehurst.wiremock.http.ssl;
 
 import static com.github.tomakehurst.wiremock.common.ArrayFunctions.prepend;
-import static com.github.tomakehurst.wiremock.common.Exceptions.throwUnchecked;
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -27,10 +27,26 @@ import java.time.Period;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import javax.net.ssl.SNIHostName;
-import sun.security.x509.*;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.asn1.x509.BasicConstraints;
+import org.bouncycastle.asn1.x509.Extension;
+import org.bouncycastle.asn1.x509.GeneralName;
+import org.bouncycastle.asn1.x509.GeneralNames;
+import org.bouncycastle.asn1.x509.KeyUsage;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-@SuppressWarnings("sunapi")
 public class CertificateAuthority {
+
+  static {
+    Security.addProvider(new BouncyCastleProvider());
+  }
 
   private final X509Certificate[] certificateChain;
   private final PrivateKey key;
@@ -47,66 +63,56 @@ public class CertificateAuthority {
       throws CertificateGenerationUnsupportedException {
     try {
       KeyPair pair = generateKeyPair("RSA");
-      String sigAlg = "SHA256WithRSA";
-      X509CertInfo info =
-          makeX509CertInfo(
-              sigAlg,
-              "WireMock Local Self Signed Root Certificate",
-              ZonedDateTime.now().minus(Period.ofDays(1)),
-              Period.ofYears(10),
-              pair.getPublic(),
-              certificateAuthorityExtensions(pair.getPublic()));
-
-      X509CertImpl certificate = selfSign(info, pair.getPrivate(), sigAlg);
-
+      X509Certificate certificate =
+          selfSign(
+              pair,
+              "SHA256WithRSA",
+              "CN=WireMock Local Self Signed Root Certificate",
+              Period.ofYears(10));
       return new CertificateAuthority(new X509Certificate[] {certificate}, pair.getPrivate());
-    } catch (NoSuchAlgorithmException
-        | NoSuchProviderException
-        | InvalidKeyException
-        | CertificateException
-        | SignatureException
-        | NoSuchMethodError
-        | VerifyError
-        | NoClassDefFoundError
-        | IOException
-        | IllegalAccessError e) {
+    } catch (Exception e) {
       throw new CertificateGenerationUnsupportedException(
           "Your runtime does not support generating certificates at runtime", e);
     }
   }
 
-  private static X509CertImpl selfSign(X509CertInfo info, PrivateKey privateKey, String sigAlg)
-      throws CertificateException, NoSuchAlgorithmException, InvalidKeyException,
-          NoSuchProviderException, SignatureException {
-    X509CertImpl certificate = new X509CertImpl(info);
-    certificate.sign(privateKey, sigAlg);
-    return certificate;
-  }
+  private static X509Certificate selfSign(
+      KeyPair keyPair, String signatureAlgorithm, String subject, Period validity)
+      throws OperatorCreationException,
+          CertificateException,
+          IOException,
+          NoSuchAlgorithmException {
+    X500Name subjectDN = new X500Name(subject);
+    ZonedDateTime start = ZonedDateTime.now().minus(Period.ofDays(1));
+    ZonedDateTime end = start.plus(validity);
+    BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 
-  private static CertificateExtensions certificateAuthorityExtensions(PublicKey publicKey) {
-    try {
-      KeyIdentifier keyId = new KeyIdentifier(publicKey);
-      byte[] keyIdBytes = keyId.getIdentifier();
-      CertificateExtensions extensions = new CertificateExtensions();
-      extensions.set(
-          AuthorityKeyIdentifierExtension.NAME,
-          new AuthorityKeyIdentifierExtension(keyId, null, null));
+    X509v3CertificateBuilder builder =
+        new JcaX509v3CertificateBuilder(
+            subjectDN,
+            serial,
+            Date.from(start.toInstant()),
+            Date.from(end.toInstant()),
+            subjectDN,
+            keyPair.getPublic());
 
-      extensions.set(
-          BasicConstraintsExtension.NAME, new BasicConstraintsExtension(true, Integer.MAX_VALUE));
+    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+    builder.addExtension(
+        Extension.subjectKeyIdentifier,
+        false,
+        extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+    builder.addExtension(
+        Extension.authorityKeyIdentifier,
+        false,
+        extUtils.createAuthorityKeyIdentifier(keyPair.getPublic()));
+    builder.addExtension(
+        Extension.basicConstraints, true, new BasicConstraints(true)); // Mark as CA
+    builder.addExtension(
+        Extension.keyUsage, true, new KeyUsage(KeyUsage.keyCertSign | KeyUsage.cRLSign));
 
-      KeyUsageExtension keyUsage = new KeyUsageExtension(new boolean[7]);
-      keyUsage.set(KeyUsageExtension.KEY_CERTSIGN, true);
-      keyUsage.set(KeyUsageExtension.CRL_SIGN, true);
-      extensions.set(KeyUsageExtension.NAME, keyUsage);
-
-      extensions.set(
-          SubjectKeyIdentifierExtension.NAME, new SubjectKeyIdentifierExtension(keyIdBytes));
-
-      return extensions;
-    } catch (IOException e) {
-      return throwUnchecked(e, null);
-    }
+    ContentSigner signer =
+        new JcaContentSignerBuilder(signatureAlgorithm).build(keyPair.getPrivate());
+    return new JcaX509CertificateConverter().getCertificate(builder.build(signer));
   }
 
   public X509Certificate[] certificateChain() {
@@ -122,101 +128,65 @@ public class CertificateAuthority {
     try {
       KeyPair pair = generateKeyPair(keyType);
       String sigAlg = "SHA256With" + keyType;
-      X509CertInfo info =
-          makeX509CertInfo(
-              sigAlg,
-              hostName.getAsciiName(),
-              ZonedDateTime.now().minus(Period.ofDays(1)),
-              Period.ofYears(1),
-              pair.getPublic(),
-              subjectAlternativeName(hostName));
-
-      X509CertImpl certificate = sign(info);
+      X509Certificate certificate =
+          sign(pair, sigAlg, "CN=" + hostName.getAsciiName(), Period.ofYears(1), hostName);
 
       X509Certificate[] fullChain = prepend(certificate, certificateChain);
       return new CertChainAndKey(fullChain, pair.getPrivate());
-    } catch (NoSuchAlgorithmException
-        | NoSuchProviderException
-        | InvalidKeyException
-        | CertificateException
-        | SignatureException
-        | NoSuchMethodError
-        | VerifyError
-        | NoClassDefFoundError
-        | IOException
-        | IllegalAccessError e) {
+    } catch (Exception e) {
       throw new CertificateGenerationUnsupportedException(
           "Your runtime does not support generating certificates at runtime", e);
     }
   }
 
-  private X509CertImpl sign(X509CertInfo info)
-      throws CertificateException, IOException, NoSuchAlgorithmException, InvalidKeyException,
-          NoSuchProviderException, SignatureException {
+  private X509Certificate sign(
+      KeyPair keyPair,
+      String signatureAlgorithm,
+      String subject,
+      Period validity,
+      SNIHostName hostName)
+      throws OperatorCreationException,
+          CertificateException,
+          IOException,
+          NoSuchAlgorithmException {
     X509Certificate issuerCertificate = certificateChain[0];
-    info.set(X509CertInfo.ISSUER, issuerCertificate.getSubjectDN());
+    X500Name issuerDN = new X500Name(issuerCertificate.getSubjectX500Principal().getName());
+    X500Name subjectDN = new X500Name(subject);
+    ZonedDateTime start = ZonedDateTime.now().minus(Period.ofDays(1));
+    ZonedDateTime end = start.plus(validity);
+    BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 
-    X509CertImpl certificate = new X509CertImpl(info);
-    certificate.sign(key, issuerCertificate.getSigAlgName());
-    return certificate;
+    X509v3CertificateBuilder builder =
+        new JcaX509v3CertificateBuilder(
+            issuerDN,
+            serial,
+            Date.from(start.toInstant()),
+            Date.from(end.toInstant()),
+            subjectDN,
+            keyPair.getPublic());
+
+    JcaX509ExtensionUtils extUtils = new JcaX509ExtensionUtils();
+    builder.addExtension(
+        Extension.subjectKeyIdentifier,
+        false,
+        extUtils.createSubjectKeyIdentifier(keyPair.getPublic()));
+    builder.addExtension(
+        Extension.authorityKeyIdentifier,
+        false,
+        extUtils.createAuthorityKeyIdentifier(issuerCertificate.getPublicKey()));
+    builder.addExtension(Extension.basicConstraints, true, new BasicConstraints(false)); // Not a CA
+
+    GeneralNames subjectAlternativeNames =
+        new GeneralNames(new GeneralName(GeneralName.dNSName, hostName.getAsciiName()));
+    builder.addExtension(Extension.subjectAlternativeName, false, subjectAlternativeNames);
+
+    ContentSigner signer = new JcaContentSignerBuilder(signatureAlgorithm).build(key);
+    return new JcaX509CertificateConverter().getCertificate(builder.build(signer));
   }
 
   private static KeyPair generateKeyPair(String keyType) throws NoSuchAlgorithmException {
     KeyPairGenerator keyGen = KeyPairGenerator.getInstance(keyType);
     keyGen.initialize(2048, new SecureRandom());
     return keyGen.generateKeyPair();
-  }
-
-  private static X509CertInfo makeX509CertInfo(
-      String sigAlg,
-      String subjectName,
-      ZonedDateTime start,
-      Period validity,
-      PublicKey publicKey,
-      CertificateExtensions certificateExtensions)
-      throws IOException, CertificateException, NoSuchAlgorithmException {
-    ZonedDateTime end = start.plus(validity);
-
-    X500Name myname = new X500Name("CN=" + subjectName);
-    X509CertInfo info = new X509CertInfo();
-    // Add all mandatory attributes
-    info.set(X509CertInfo.VERSION, new CertificateVersion(CertificateVersion.V3));
-    info.set(
-        X509CertInfo.SERIAL_NUMBER,
-        new CertificateSerialNumber(new java.util.Random().nextInt() & 0x7fffffff));
-    info.set(X509CertInfo.ALGORITHM_ID, new CertificateAlgorithmId(AlgorithmId.get(sigAlg)));
-    info.set(X509CertInfo.SUBJECT, myname);
-    info.set(X509CertInfo.KEY, new CertificateX509Key(publicKey));
-    info.set(
-        X509CertInfo.VALIDITY,
-        new CertificateValidity(Date.from(start.toInstant()), Date.from(end.toInstant())));
-    info.set(X509CertInfo.ISSUER, myname);
-    info.set(X509CertInfo.EXTENSIONS, certificateExtensions);
-    return info;
-  }
-
-  private static CertificateExtensions subjectAlternativeName(SNIHostName hostName) {
-    GeneralName name = new GeneralName(dnsName(hostName));
-    GeneralNames names = new GeneralNames();
-    names.add(name);
-    try {
-      CertificateExtensions extensions = new CertificateExtensions();
-      extensions.set(
-          SubjectAlternativeNameExtension.NAME, new SubjectAlternativeNameExtension(names));
-      return extensions;
-    } catch (IOException e) {
-      // it's an in memory op, should be impossible...
-      return throwUnchecked(e, null);
-    }
-  }
-
-  private static DNSName dnsName(SNIHostName name) {
-    try {
-      return new DNSName(name.getAsciiName());
-    } catch (IOException e) {
-      // DNSName throws IOException for a parse error (which isn't an IO problem...)
-      // An SNIHostName should be guaranteed not to have a parse issue
-      return throwUnchecked(e, null);
-    }
   }
 }

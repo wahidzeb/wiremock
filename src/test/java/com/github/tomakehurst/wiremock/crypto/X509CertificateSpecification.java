@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020-2021 Thomas Akehurst
+ * Copyright (C) 2011-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,98 +16,62 @@
 package com.github.tomakehurst.wiremock.crypto;
 
 import static com.github.tomakehurst.wiremock.common.Exceptions.throwUnchecked;
-import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.security.InvalidKeyException;
-import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SecureRandom;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Date;
-import sun.security.x509.AlgorithmId;
-import sun.security.x509.CertificateAlgorithmId;
-import sun.security.x509.CertificateIssuerName;
-import sun.security.x509.CertificateSerialNumber;
-import sun.security.x509.CertificateSubjectName;
-import sun.security.x509.CertificateValidity;
-import sun.security.x509.CertificateX509Key;
-import sun.security.x509.X500Name;
-import sun.security.x509.X509CertImpl;
-import sun.security.x509.X509CertInfo;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509v3CertificateBuilder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.OperatorCreationException;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
-@SuppressWarnings("sunapi")
 public class X509CertificateSpecification implements CertificateSpecification {
+
+  static {
+    Security.addProvider(new BouncyCastleProvider());
+  }
 
   private final X509CertificateVersion version;
   private final X500Name subject;
   private final X500Name issuer;
-  // java.time is JDK8 only
   private final Date notBefore;
   private final Date notAfter;
 
   public X509CertificateSpecification(
       X509CertificateVersion version, String subject, String issuer, Date notBefore, Date notAfter)
       throws IOException {
-    this.version = requireNonNull(version);
-    this.subject = new X500Name(requireNonNull(subject));
-    this.issuer = new X500Name(requireNonNull(issuer));
-    this.notBefore = requireNonNull(notBefore);
-    this.notAfter = requireNonNull(notAfter);
+    this.version = version;
+    this.subject = new X500Name(subject);
+    this.issuer = new X500Name(issuer);
+    this.notBefore = notBefore;
+    this.notAfter = notAfter;
   }
 
   @Override
   public X509Certificate certificateFor(KeyPair keyPair)
       throws CertificateException, InvalidKeyException, SignatureException {
     try {
-      SecureRandom random = new SecureRandom();
+      BigInteger serial = BigInteger.valueOf(System.currentTimeMillis());
 
-      X509CertInfo info = new X509CertInfo();
-      info.set(X509CertInfo.VERSION, version.getVersion());
+      X509v3CertificateBuilder certBuilder =
+          new JcaX509v3CertificateBuilder(
+              issuer, serial, notBefore, notAfter, subject, keyPair.getPublic());
 
-      // On Java <= 1.7 it has to be a `CertificateSubjectName`
-      // On Java >= 1.8 it has to be an `X500Name`
-      try {
-        info.set(X509CertInfo.SUBJECT, subject);
-      } catch (CertificateException ignore) {
-        info.set(X509CertInfo.SUBJECT, new CertificateSubjectName(subject));
-      }
+      ContentSigner signer =
+          new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
 
-      // On Java <= 1.7 it has to be a `CertificateIssuerName`
-      // On Java >= 1.8 it has to be an `X500Name`
-      try {
-        info.set(X509CertInfo.ISSUER, issuer);
-      } catch (CertificateException ignore) {
-        info.set(X509CertInfo.ISSUER, new CertificateIssuerName(issuer));
-      }
-
-      info.set(X509CertInfo.VALIDITY, new CertificateValidity(notBefore, notAfter));
-
-      info.set(X509CertInfo.KEY, new CertificateX509Key(keyPair.getPublic()));
-      info.set(X509CertInfo.SERIAL_NUMBER, new CertificateSerialNumber(new BigInteger(64, random)));
-      info.set(
-          X509CertInfo.ALGORITHM_ID,
-          new CertificateAlgorithmId(new AlgorithmId(AlgorithmId.SHA256_oid)));
-
-      // Sign the cert to identify the algorithm that's used.
-      X509CertImpl cert = new X509CertImpl(info);
-      cert.sign(keyPair.getPrivate(), "SHA256withRSA");
-
-      // Update the algorithm and sign again.
-      info.set(
-          CertificateAlgorithmId.NAME + '.' + CertificateAlgorithmId.ALGORITHM,
-          cert.get(X509CertImpl.SIG_ALG));
-      cert = new X509CertImpl(info);
-      cert.sign(keyPair.getPrivate(), "SHA256withRSA");
-      cert.verify(keyPair.getPublic());
-
-      return cert;
-    } catch (IOException | NoSuchAlgorithmException | NoSuchProviderException e) {
-      return throwUnchecked(e, null);
+      return new JcaX509CertificateConverter()
+          .setProvider("BC")
+          .getCertificate(certBuilder.build(signer));
+    } catch (OperatorCreationException | GeneralSecurityException e) {
+      return throwUnchecked(e, X509Certificate.class);
     }
   }
 }
