@@ -36,6 +36,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * A builder for creating basic stub mappings.
+ *
+ * <p>This class is the main implementation of the {@link MappingBuilder} and {@link
+ * ScenarioMappingBuilder} interfaces.
+ */
 class BasicMappingBuilder implements ScenarioMappingBuilder {
 
   private final RequestPatternBuilder requestPatternBuilder;
@@ -51,6 +57,12 @@ class BasicMappingBuilder implements ScenarioMappingBuilder {
   private List<ServeEventListenerDefinition> serveEventListeners = new ArrayList<>();
   private Metadata metadata;
 
+  /**
+   * Creates a new BasicMappingBuilder.
+   *
+   * @param method the HTTP method to match on
+   * @param urlPattern the URL pattern to match on
+   */
   BasicMappingBuilder(RequestMethod method, UrlPattern urlPattern) {
     requestPatternBuilder = new RequestPatternBuilder(method, urlPattern);
   }
@@ -299,6 +311,11 @@ class BasicMappingBuilder implements ScenarioMappingBuilder {
     return scenarioName == null && (requiredScenarioState != null || newScenarioState != null);
   }
 
+  /**
+   * Builds the stub mapping.
+   *
+   * @return the stub mapping
+   */
   @Override
   public StubMapping build() {
     checkState(

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2022 Thomas Akehurst
+ * Copyright (C) 2016-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,14 @@ package com.github.tomakehurst.wiremock.matching;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/** A string value pattern that matches when the input matches the specified regular expression. */
 public class RegexPattern extends AbstractRegexPattern {
 
+  /**
+   * Creates a new RegexPattern.
+   *
+   * @param regex the regular expression to match against
+   */
   public RegexPattern(@JsonProperty("matches") String regex) {
     super(regex);
   }

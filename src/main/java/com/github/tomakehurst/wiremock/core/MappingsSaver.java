@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2021 Thomas Akehurst
+ * Copyright (C) 2013-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,29 @@ package com.github.tomakehurst.wiremock.core;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import java.util.List;
 
+/** An interface for saving and removing stub mappings. */
 public interface MappingsSaver {
+  /**
+   * Saves a list of stub mappings.
+   *
+   * @param stubMappings the stub mappings to save
+   */
   void save(List<StubMapping> stubMappings);
 
+  /**
+   * Saves a single stub mapping.
+   *
+   * @param stubMapping the stub mapping to save
+   */
   void save(StubMapping stubMapping);
 
+  /**
+   * Removes a single stub mapping.
+   *
+   * @param stubMapping the stub mapping to remove
+   */
   void remove(StubMapping stubMapping);
 
+  /** Removes all stub mappings. */
   void removeAll();
 }

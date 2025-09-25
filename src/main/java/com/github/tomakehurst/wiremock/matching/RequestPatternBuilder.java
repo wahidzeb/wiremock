@@ -28,6 +28,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A builder for creating request patterns.
+ *
+ * <p>This class is used to build {@link RequestPattern} objects, which are used to match incoming
+ * requests.
+ */
 public class RequestPatternBuilder {
 
   private String scheme;
@@ -50,17 +56,35 @@ public class RequestPatternBuilder {
 
   private CustomMatcherDefinition customMatcherDefinition;
 
+  /** Creates a new RequestPatternBuilder. */
   public RequestPatternBuilder() {}
 
+  /**
+   * Creates a new RequestPatternBuilder with a custom matcher.
+   *
+   * @param customMatcher the custom matcher
+   */
   public RequestPatternBuilder(ValueMatcher<Request> customMatcher) {
     this.customMatcher = customMatcher;
   }
 
+  /**
+   * Creates a new RequestPatternBuilder with a method and URL pattern.
+   *
+   * @param method the HTTP method
+   * @param url the URL pattern
+   */
   public RequestPatternBuilder(RequestMethod method, UrlPattern url) {
     this.method = method;
     this.url = url;
   }
 
+  /**
+   * Creates a new RequestPatternBuilder with a custom matcher.
+   *
+   * @param customRequestMatcherName the name of the custom matcher
+   * @param parameters the parameters for the custom matcher
+   */
   public RequestPatternBuilder(String customRequestMatcherName, Parameters parameters) {
     this.customMatcherDefinition =
         new CustomMatcherDefinition(customRequestMatcherName, parameters);
@@ -266,6 +290,11 @@ public class RequestPatternBuilder {
     return this;
   }
 
+  /**
+   * Builds the request pattern.
+   *
+   * @return the request pattern
+   */
   public RequestPattern build() {
     if (!(url instanceof UrlPathTemplatePattern) && !pathParams.isEmpty()) {
       throw new InvalidInputException(

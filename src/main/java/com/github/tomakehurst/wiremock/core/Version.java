@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Thomas Akehurst
+ * Copyright (C) 2023-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,13 +21,24 @@ import com.github.tomakehurst.wiremock.common.Lazy;
 import java.io.IOException;
 import java.util.Properties;
 
+/** A utility class for getting the current version of WireMock. */
 public class Version {
   private static final Lazy<String> version = lazy(Version::load);
 
+  /**
+   * Gets the current version of WireMock.
+   *
+   * @return the current version
+   */
   public static String getCurrentVersion() {
     return version.get();
   }
 
+  /**
+   * Loads the version from the version.properties file.
+   *
+   * @return the version, or "unknown" if it cannot be loaded
+   */
   private static String load() {
     try {
       Properties properties = new Properties();

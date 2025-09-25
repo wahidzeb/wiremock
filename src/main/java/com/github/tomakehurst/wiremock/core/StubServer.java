@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012-2023 Thomas Akehurst
+ * Copyright (C) 2012-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,19 @@ package com.github.tomakehurst.wiremock.core;
 
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 
+/**
+ * A server that can serve stubs.
+ *
+ * <p>This interface defines the basic operation for a server that can serve stubs, which is to
+ * serve a stub for a given request.
+ */
 public interface StubServer {
 
+  /**
+   * Serves a stub for the specified serve event.
+   *
+   * @param serveEvent the serve event representing the request
+   * @return the serve event with the response
+   */
   ServeEvent serveStubFor(ServeEvent serveEvent);
 }

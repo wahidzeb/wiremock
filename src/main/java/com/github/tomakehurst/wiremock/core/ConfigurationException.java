@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2021 Thomas Akehurst
+ * Copyright (C) 2013-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,14 @@
  */
 package com.github.tomakehurst.wiremock.core;
 
+/** An exception thrown when there is a problem with the WireMock configuration. */
 public class ConfigurationException extends RuntimeException {
 
+  /**
+   * Creates a new ConfigurationException.
+   *
+   * @param message the detail message
+   */
   public ConfigurationException(String message) {
     super(message);
   }

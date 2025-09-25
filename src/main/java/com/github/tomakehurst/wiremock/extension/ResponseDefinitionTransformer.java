@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2023 Thomas Akehurst
+ * Copyright (C) 2014-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,24 @@ import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.ResponseDefinition;
 
+/**
+ * A transformer for response definitions.
+ *
+ * @deprecated Use {@link ResponseDefinitionTransformerV2} instead
+ */
 @Deprecated
-/** @deprecated Use {@link ResponseDefinitionTransformerV2} instead */
 public abstract class ResponseDefinitionTransformer
     extends AbstractTransformer<ResponseDefinition> {
 
+  /**
+   * Transforms the specified response definition.
+   *
+   * @param request the request
+   * @param responseDefinition the response definition to transform
+   * @param files the file source
+   * @param parameters the parameters
+   * @return the transformed response definition
+   */
   @Override
   public abstract ResponseDefinition transform(
       Request request,

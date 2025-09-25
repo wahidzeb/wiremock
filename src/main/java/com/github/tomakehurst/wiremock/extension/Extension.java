@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2024 Thomas Akehurst
+ * Copyright (C) 2014-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,23 @@
  */
 package com.github.tomakehurst.wiremock.extension;
 
+/**
+ * The base interface for all WireMock extensions.
+ *
+ * <p>All extensions must implement this interface.
+ */
 public interface Extension {
 
+  /**
+   * Gets the name of the extension.
+   *
+   * @return the name of the extension
+   */
   String getName();
 
+  /** Called when the WireMock server is started. */
   default void start() {}
 
+  /** Called when the WireMock server is stopped. */
   default void stop() {}
 }

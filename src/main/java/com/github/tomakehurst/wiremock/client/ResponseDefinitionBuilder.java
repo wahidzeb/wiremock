@@ -30,6 +30,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A builder for creating response definitions.
+ *
+ * <p>This class is used to build {@link ResponseDefinition} objects, which represent the response
+ * to be returned by a stub.
+ */
 public class ResponseDefinitionBuilder {
 
   protected int status = HTTP_OK;
@@ -47,6 +53,12 @@ public class ResponseDefinitionBuilder {
   protected Map<String, Object> transformerParameters = new HashMap<>();
   protected Boolean wasConfigured = true;
 
+  /**
+   * Creates a new ResponseDefinitionBuilder that is a copy of the specified response definition.
+   *
+   * @param responseDefinition the response definition to copy
+   * @return a new ResponseDefinitionBuilder
+   */
   public static ResponseDefinitionBuilder like(ResponseDefinition responseDefinition) {
     ResponseDefinitionBuilder builder = new ResponseDefinitionBuilder();
     builder.status = responseDefinition.getStatus();
@@ -90,10 +102,23 @@ public class ResponseDefinitionBuilder {
     return builder;
   }
 
+  /**
+   * Creates a new JSON response definition.
+   *
+   * @param body the response body
+   * @return a new response definition
+   */
   public static ResponseDefinition jsonResponse(Object body) {
     return jsonResponse(body, HTTP_OK);
   }
 
+  /**
+   * Creates a new JSON response definition.
+   *
+   * @param body the response body
+   * @param status the response status
+   * @return a new response definition
+   */
   public static ResponseDefinition jsonResponse(Object body, int status) {
     return new ResponseDefinitionBuilder()
         .withBody(Json.write(body))
@@ -106,11 +131,24 @@ public class ResponseDefinitionBuilder {
     return this;
   }
 
+  /**
+   * Sets the response status.
+   *
+   * @param status the response status
+   * @return this builder
+   */
   public ResponseDefinitionBuilder withStatus(int status) {
     this.status = status;
     return this;
   }
 
+  /**
+   * Adds a header to the response.
+   *
+   * @param key the header key
+   * @param values the header values
+   * @return this builder
+   */
   public ResponseDefinitionBuilder withHeader(String key, String... values) {
     headers.add(new HttpHeader(key, values));
     return this;

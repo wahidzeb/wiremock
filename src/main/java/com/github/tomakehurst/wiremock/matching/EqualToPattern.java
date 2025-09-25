@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2023 Thomas Akehurst
+ * Copyright (C) 2016-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,21 @@ import static com.github.tomakehurst.wiremock.common.Strings.normalisedLevenshte
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
+/**
+ * A string value pattern that matches when the input is equal to the specified value.
+ *
+ * <p>This pattern can be configured to be case-insensitive.
+ */
 public class EqualToPattern extends StringValuePattern {
 
   private final Boolean caseInsensitive;
 
+  /**
+   * Creates a new EqualToPattern.
+   *
+   * @param testValue the value to match against
+   * @param caseInsensitive whether the match should be case-insensitive
+   */
   public EqualToPattern(
       @JsonProperty("equalTo") String testValue,
       @JsonProperty("caseInsensitive") Boolean caseInsensitive) {

@@ -63,6 +63,21 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * The main class for interacting with a WireMock server.
+ *
+ * <p>This class provides a fluent API for creating stub mappings, verifying requests, and
+ * configuring the server.
+ *
+ * <p>Example:
+ *
+ * <pre>
+ * WireMock wireMock = new WireMock("localhost", 8080);
+ * wireMock.register(
+ *     get(urlEqualTo("/my/resource"))
+ *         .willReturn(aResponse().withStatus(200).withBody("Hello, world!")));
+ * </pre>
+ */
 public class WireMock {
 
   private static final int DEFAULT_PORT = 8080;
@@ -80,10 +95,20 @@ public class WireMock {
         }
       };
 
+  /**
+   * Creates a new WireMockBuilder.
+   *
+   * @return a new WireMockBuilder
+   */
   public static WireMockBuilder create() {
     return new WireMockBuilder();
   }
 
+  /**
+   * Creates a new WireMock client.
+   *
+   * @param admin the admin client to use
+   */
   public WireMock(Admin admin) {
     this.admin = admin;
   }

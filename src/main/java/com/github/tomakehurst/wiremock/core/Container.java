@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2021 Thomas Akehurst
+ * Copyright (C) 2013-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,19 @@
  */
 package com.github.tomakehurst.wiremock.core;
 
-/** A container of a WireMockApp instance */
+/**
+ * A container for a WireMock application.
+ *
+ * <p>This interface defines the basic operations for a container that can run a WireMock
+ * application, such as getting the port number and shutting down the container.
+ */
 public interface Container {
 
+  /**
+   * Gets the port number of the container.
+   *
+   * @return the port number
+   */
   int port();
 
   /** Shuts down the container, stopping execution of WireMock, gracefully if possible. */

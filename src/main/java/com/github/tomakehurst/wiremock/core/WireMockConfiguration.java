@@ -58,6 +58,23 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * The configuration for a WireMock server.
+ *
+ * <p>This class is used to configure a WireMock server. It can be used to set the port number,
+ * HTTPS settings, and other options.
+ *
+ * <p>Example:
+ *
+ * <pre>
+ * WireMockConfiguration options = wireMockConfig()
+ *     .port(8080)
+ *     .httpsPort(8443)
+ *     .keystorePath("/path/to/keystore.jks");
+ * </pre>
+ *
+ * @see Options
+ */
 public class WireMockConfiguration implements Options {
 
   private long asyncResponseTimeout = DEFAULT_TIMEOUT;
@@ -162,10 +179,22 @@ public class WireMockConfiguration implements Options {
     return mappingsSource;
   }
 
+  /**
+   * Creates a new WireMockConfiguration with default settings.
+   *
+   * @return a new WireMockConfiguration
+   */
   public static WireMockConfiguration wireMockConfig() {
     return new WireMockConfiguration();
   }
 
+  /**
+   * Creates a new WireMockConfiguration.
+   *
+   * <p>This is an alias for {@link #wireMockConfig()}.
+   *
+   * @return a new WireMockConfiguration
+   */
   public static WireMockConfiguration options() {
     return wireMockConfig();
   }
@@ -183,6 +212,18 @@ public class WireMockConfiguration implements Options {
     return this;
   }
 
+  /**
+   * Sets the port number for the WireMock server.
+   *
+   * <p>Example:
+   *
+   * <pre>
+   * .port(8080)
+   * </pre>
+   *
+   * @param portNumber the port number
+   * @return this configuration object
+   */
   public WireMockConfiguration port(int portNumber) {
     this.portNumber = portNumber;
     return this;

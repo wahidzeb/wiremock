@@ -46,6 +46,22 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+/**
+ * The main application class for WireMock.
+ *
+ * <p>This class is the central hub of the application. It orchestrates the stubbing and admin
+ * functionality, and it holds references to all the major components of WireMock.
+ *
+ * <p>It is responsible for:
+ *
+ * <ul>
+ *   <li>Loading configuration
+ *   <li>Loading extensions
+ *   <li>Building the admin and stub request handlers
+ *   <li>Serving stubs
+ *   <li>Handling admin requests
+ * </ul>
+ */
 public class WireMockApp implements StubServer, Admin {
 
   public static final String FILES_ROOT = "__files";
@@ -72,6 +88,16 @@ public class WireMockApp implements StubServer, Admin {
 
   private Extensions extensions;
 
+  /**
+   * Creates a new WireMockApp.
+   *
+   * <p>This constructor initializes the WireMock application with the specified options and
+   * container. It sets up the stores, loads extensions, and prepares the application to serve stubs
+   * and handle admin requests.
+   *
+   * @param options the options for this WireMock application
+   * @param container the container for this WireMock application
+   */
   public WireMockApp(Options options, Container container) {
     if (!options.getDisableOptimizeXmlFactoriesLoading()
         && Boolean.FALSE.equals(FACTORIES_LOADING_OPTIMIZED.get())) {
@@ -191,6 +217,13 @@ public class WireMockApp implements StubServer, Admin {
     loadDefaultMappings();
   }
 
+  /**
+   * Builds the admin request handler.
+   *
+   * <p>The admin request handler is responsible for handling all requests to the admin API.
+   *
+   * @return the admin request handler
+   */
   public AdminRequestHandler buildAdminRequestHandler() {
     AdminRoutes adminRoutes =
         AdminRoutes.forServer(extensions.ofType(AdminApiExtension.class).values(), stores);
@@ -205,6 +238,14 @@ public class WireMockApp implements StubServer, Admin {
         options.getDataTruncationSettings());
   }
 
+  /**
+   * Builds the stub request handler.
+   *
+   * <p>The stub request handler is responsible for matching incoming requests to stub mappings and
+   * serving the appropriate responses.
+   *
+   * @return the stub request handler
+   */
   public StubRequestHandler buildStubRequestHandler() {
     Map<String, PostServeAction> postServeActions = extensions.ofType(PostServeAction.class);
     BrowserProxySettings browserProxySettings = options.browserProxySettings();

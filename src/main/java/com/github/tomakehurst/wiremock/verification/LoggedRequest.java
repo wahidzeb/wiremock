@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2024 Thomas Akehurst
+ * Copyright (C) 2011-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.*;
 
+/** A request that has been received by WireMock. */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class LoggedRequest implements Request {
 
@@ -60,6 +61,12 @@ public class LoggedRequest implements Request {
   private final Lazy<String> lazyBodyAsString;
   private final Lazy<String> lazyBodyAsBase64;
 
+  /**
+   * Creates a new LoggedRequest from a Request.
+   *
+   * @param request the request
+   * @return a new LoggedRequest
+   */
   public static LoggedRequest createFrom(Request request) {
     return new LoggedRequest(
         request.getId(),

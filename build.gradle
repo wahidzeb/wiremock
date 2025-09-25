@@ -38,7 +38,8 @@ project.ext {
     jackson        : '2.18.3',
     xmlUnit        : '2.10.0',
     jsonUnit       : '2.40.1',
-    junitJupiter   : '5.12.2'
+    junitJupiter   : '5.12.2',
+    bouncyCastle   : '1.82'
   ]
 }
 
@@ -78,8 +79,8 @@ dependencies {
     exclude group: 'org.ow2.asm', module: 'asm'
   }
 
-  api 'org.bouncycastle:bcprov-jdk18on:1.82'
-  api 'org.bouncycastle:bcpkix-jdk18on:1.82'
+  api "org.bouncycastle:bcprov-jdk18on:$versions.bouncyCastle"
+  api "org.bouncycastle:bcpkix-jdk18on:$versions.bouncyCastle"
 
   implementation "org.slf4j:slf4j-api:1.7.36"
   standaloneOnly "org.slf4j:slf4j-nop:1.7.36"

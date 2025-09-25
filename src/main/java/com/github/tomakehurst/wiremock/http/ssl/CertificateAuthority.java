@@ -42,15 +42,28 @@ import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 
+/**
+ * A Certificate Authority (CA) that can be used to generate a root certificate and sign new
+ * certificates.
+ *
+ * <p>This implementation uses the Bouncy Castle library to generate certificates.
+ */
 public class CertificateAuthority {
 
   static {
+    // Add Bouncy Castle as a security provider
     Security.addProvider(new BouncyCastleProvider());
   }
 
   private final X509Certificate[] certificateChain;
   private final PrivateKey key;
 
+  /**
+   * Creates a new CertificateAuthority.
+   *
+   * @param certificateChain the certificate chain, with the CA's certificate at the top
+   * @param key the private key of the CA
+   */
   public CertificateAuthority(X509Certificate[] certificateChain, PrivateKey key) {
     this.certificateChain = requireNonNull(certificateChain);
     if (certificateChain.length == 0) {
@@ -59,6 +72,13 @@ public class CertificateAuthority {
     this.key = requireNonNull(key);
   }
 
+  /**
+   * Generates a new self-signed Certificate Authority.
+   *
+   * @return a new CertificateAuthority
+   * @throws CertificateGenerationUnsupportedException if the runtime does not support generating
+   *     certificates
+   */
   public static CertificateAuthority generateCertificateAuthority()
       throws CertificateGenerationUnsupportedException {
     try {
@@ -115,10 +135,20 @@ public class CertificateAuthority {
     return new JcaX509CertificateConverter().getCertificate(builder.build(signer));
   }
 
+  /**
+   * Returns the certificate chain for this CA.
+   *
+   * @return the certificate chain
+   */
   public X509Certificate[] certificateChain() {
     return certificateChain;
   }
 
+  /**
+   * Returns the private key for this CA.
+   *
+   * @return the private key
+   */
   public PrivateKey key() {
     return key;
   }

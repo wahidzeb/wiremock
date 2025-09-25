@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011-2023 Thomas Akehurst
+ * Copyright (C) 2011-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,12 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * A mapping from a request pattern to a response definition.
+ *
+ * <p>This class is the main representation of a stub mapping. It contains the request pattern, the
+ * response definition, and other metadata such as the priority and scenario information.
+ */
 @JsonPropertyOrder({"id", "name", "request", "newRequest", "response", "uuid"})
 @JsonIgnoreProperties({"$schema"}) // Allows this to be added as a hint to IDEs like VS Code
 public class StubMapping {
@@ -58,6 +64,12 @@ public class StubMapping {
   private long insertionIndex;
   private boolean isDirty = true;
 
+  /**
+   * Creates a new StubMapping.
+   *
+   * @param requestPattern the request pattern
+   * @param response the response definition
+   */
   public StubMapping(RequestPattern requestPattern, ResponseDefinition response) {
     setRequest(requestPattern);
     this.response = response;

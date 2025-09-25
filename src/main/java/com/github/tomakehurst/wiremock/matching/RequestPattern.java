@@ -41,6 +41,12 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * A pattern for matching incoming requests.
+ *
+ * <p>This class is used to define a pattern for matching incoming requests. It can be used to match
+ * on the URL, method, headers, and body of a request.
+ */
 public class RequestPattern implements NamedValueMatcher<Request> {
 
   private final String scheme;
@@ -63,6 +69,26 @@ public class RequestPattern implements NamedValueMatcher<Request> {
   private final ValueMatcher<Request> matcher;
   private final boolean hasInlineCustomMatcher;
 
+  /**
+   * Creates a new RequestPattern.
+   *
+   * @param scheme the scheme to match on
+   * @param host the host to match on
+   * @param port the port to match on
+   * @param clientIp the client IP to match on
+   * @param url the URL pattern to match on
+   * @param method the HTTP method to match on
+   * @param headers the headers to match on
+   * @param pathParams the path parameters to match on
+   * @param queryParams the query parameters to match on
+   * @param formParams the form parameters to match on
+   * @param cookies the cookies to match on
+   * @param basicAuthCredentials the basic authentication credentials to match on
+   * @param bodyPatterns the body patterns to match on
+   * @param customMatcherDefinition the custom matcher definition
+   * @param customMatcher the custom matcher
+   * @param multiPattern the multipart patterns to match on
+   */
   public RequestPattern(
       final String scheme,
       final StringValuePattern host,

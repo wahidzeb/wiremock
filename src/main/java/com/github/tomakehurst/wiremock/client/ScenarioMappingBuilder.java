@@ -27,10 +27,28 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * A builder for creating stub mappings with scenarios.
+ *
+ * <p>This interface extends the {@link MappingBuilder} interface and adds methods for dealing with
+ * scenarios.
+ */
 public interface ScenarioMappingBuilder extends MappingBuilder {
 
+  /**
+   * Sets the required state of the scenario.
+   *
+   * @param stateName the required state
+   * @return this builder
+   */
   ScenarioMappingBuilder whenScenarioStateIs(String stateName);
 
+  /**
+   * Sets the new state of the scenario.
+   *
+   * @param stateName the new state
+   * @return this builder
+   */
   ScenarioMappingBuilder willSetStateTo(String stateName);
 
   ScenarioMappingBuilder atPriority(Integer priority);

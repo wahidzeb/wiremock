@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014-2021 Thomas Akehurst
+ * Copyright (C) 2014-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,23 @@
  */
 package com.github.tomakehurst.wiremock.core;
 
+/**
+ * An interface for injecting faults into responses.
+ *
+ * <p>This interface defines methods for injecting different kinds of faults into the response, such
+ * as resetting the connection or sending a malformed response chunk.
+ */
 public interface FaultInjector {
 
+  /** Resets the connection by peer. */
   void connectionResetByPeer();
 
+  /** Sends an empty response and closes the connection. */
   void emptyResponseAndCloseConnection();
 
+  /** Sends a malformed response chunk. */
   void malformedResponseChunk();
 
+  /** Sends random data and closes the connection. */
   void randomDataAndCloseConnection();
 }

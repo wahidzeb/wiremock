@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016-2024 Thomas Akehurst
+ * Copyright (C) 2016-2025 Thomas Akehurst
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,12 @@ import com.google.common.base.Stopwatch;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+/**
+ * A representation of a request-response pair that has been served by WireMock.
+ *
+ * <p>This class contains the request, the response, the stub mapping that was matched, and other
+ * metadata.
+ */
 public class ServeEvent {
 
   public static final String ORIGINAL_SERVE_EVENT_KEY = "wiremock.ORIGINAL_SERVE_EVENT";
@@ -66,6 +72,18 @@ public class ServeEvent {
     this.stopwatch = stopwatch;
   }
 
+  /**
+   * Creates a new ServeEvent.
+   *
+   * @param id the ID of the serve event
+   * @param request the request
+   * @param stubMapping the stub mapping that was matched
+   * @param responseDefinition the response definition
+   * @param response the response
+   * @param ignoredReadOnly whether the event was matched
+   * @param timing the timing information
+   * @param subEvents the sub-events
+   */
   @JsonCreator
   public ServeEvent(
       @JsonProperty("id") UUID id,
